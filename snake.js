@@ -1,4 +1,4 @@
-var canvas = document.getElementById('cvGame');      
+var canvas = document.getElementById('cvGame');
 
 /*********************************************************************/ 
 /*thanks to Jemenake (http://stackoverflow.com/users/265932/jemenake)*/ 
@@ -18,32 +18,35 @@ function setResizeHandler(callback, timeout) {
 }
 /*********************************************************************/
 
-canvas.addEventListener('mouseup', function(e)
-			{
-			    var left = false;
-			    if(e.clientX - (canvas.clientWidth/2) <= 0)
-			    {
-				left = true;
-			    } 
-
-			    console.log(left?'left':'right');
-			});
+window.requestAnimFrame = (function(callback){
+    return window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.oRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    function(callback){
+        window.setTimeout(callback, 1);
+    };
+})();
 
 var direction = {left:0, up:1, right:2, down:3};
 
-var boardWidth = 48;
+var boardWidth = 80;
 
-var width = canvas.clientWidth;
-var height = canvas.clientHeight;
+var width = canvas.width;
+var height = canvas.height;
 var sectionHeight = height/boardWidth;
 var sectionWidth = width/boardWidth;
 
+var context = canvas.getContext("2d");
+
 function setSnakeSizes()
 {
-    width = canvas.clientWidth;
-    height = canvas.clientHeight;
+    width = canvas.width;
+    height = canvas.height;
     sectionHeight = height/boardWidth;
     sectionWidth = width/boardWidth;
+    context = canvas.getContext("2d");
 }
 
 setResizeHandler(setSnakeSizes, 350);
@@ -54,6 +57,7 @@ function snakeSection(x, y, dir)
     this.y = y;
     this.direction = dir;
     this.turningPoints = [];
+    this.turnCallBacks = [];
 }
 
 snakeSection.prototype.move = function()
@@ -61,16 +65,16 @@ snakeSection.prototype.move = function()
     switch(this.direction)
     {
     case direction.right:
-	this.x++;
+	this.x += 1;
 	break;
     case direction.left:
-	this.x--;
+	this.x -= 1;
 	break;
     case direction.up:
-	this.y--;
+	this.y -= 1;
 	break;
     case direction.down:
-	this.y++;
+	this.y += 1;
 	break;
     default:
 	break;
@@ -80,21 +84,20 @@ snakeSection.prototype.move = function()
     {
 	if(this.x == this.turningPoints[0].x && this.y == this.turningPoints[0].y)
 	{
-	    var tp = this.turningPoints.unshift();
+	    var tp = this.turningPoints.shift();
 	    this.direction = tp.direction;
 	}
     }
-}
+};
 
 snakeSection.prototype.addTurningPoint = function(turningPoint)
 {
     this.turningPoints.push(turningPoint);
-}
+};
 
 function snake()
 {
     this.body = [new snakeSection(0, 0, direction.down)];
-    this.direction = direction.down;
 }
 
 snake.prototype.move = function()
@@ -104,7 +107,7 @@ snake.prototype.move = function()
 	this.body[secI].move()
     }
     return this.checkCollision();
-}
+};
 
 snake.prototype.checkCollision = function()
 {
@@ -127,19 +130,11 @@ snake.prototype.checkCollision = function()
     }
 
     return false;
-}
+};
 
 snake.prototype.turn = function(left)
 {
     if(left)
-    {
-	this.body[0].direction--;
-	if(this.body[0].direction < direction.left)
-	{
-	    this.body[0].direction = direction.down;
-	}
-    }
-    else
     {
 	this.body[0].direction++;
 	if(this.body[0].direction > direction.down)
@@ -147,20 +142,160 @@ snake.prototype.turn = function(left)
 	    this.body[0].direction = direction.left;
 	}
     }
+    else
+    {
+	this.body[0].direction--;
+	if(this.body[0].direction < direction.left)
+	{
+	    this.body[0].direction = direction.down;
+	}
+    }
 
     for(var secI = 1; secI < this.body.length; secI++)
     {
-	this.body[secI].addTurningPoint({x:this.body[0].x, this.body[0].y, this.body[0].direction});
+	this.body[secI].addTurningPoint({x:this.body[0].x, y:this.body[0].y, direction:this.body[0].direction});
     }    
-}
+};
 
-snake.prototype.addSection()
+snake.prototype.addSection = function()
 {
-    //todo: add a section
-}
+    var secI = this.body.length - 1;
+    var curSec = this.body[secI];
+    var x = curSec.x;
+    var y = curSec.y;
+    switch(this.body[secI].direction)
+    {
+    case direction.right:
+	x--;
+	break;
+    case direction.down:
+	y--;
+	break;
+    case direction.left:
+	x++;
+	break;
+    case direction.up:
+	y++;
+	break;
+    default:
+	break;
+    }
+
+    var section = new snakeSection(x, y, curSec.direction);
+
+    for(var tpi = 0; tpi < curSec.turningPoints.length; tpi++)
+    {
+	section.addTurningPoint(curSec.turningPoints[tpi]);
+    }
+
+    this.body.push(section);
+};
 
 function board()
 {
     this.snake = new snake();
     this.piece = {x:0, y:0};
 }
+
+board.prototype.draw = function()
+{
+    context.clearRect(0, 0, width, height);
+
+    context.fillStyle = '#FFFFFF';
+
+    for(var secI = 0; secI < this.snake.body.length; secI++)
+    {
+	var section = this.snake.body[secI];
+	var x = round((section.x*sectionWidth));
+	var y = round((section.y*sectionHeight));
+	context.fillRect(x, y, round(sectionWidth), round(sectionHeight));
+    }
+
+    context.fillStyle = '#FF0000';
+
+    var pieceX = round(this.piece.x*sectionWidth);
+    var pieceY = round(this.piece.y*sectionHeight);
+    context.fillRect(pieceX, pieceY, round(sectionWidth), round(sectionHeight));
+};
+
+board.prototype.run = function()
+{
+    collision = this.snake.move();
+    this.checkPieceEaten();
+    this.draw();
+    var that = this;
+    if(!collision)
+    {
+	setTimeout(function()
+		   {
+		       requestAnimFrame(that.run.bind(that));
+		   }, 1000/10);
+    }
+    else
+    {
+	console.log('crash!');
+    }
+};
+
+board.prototype.checkPieceEaten = function()
+{
+    if(this.piece.x == this.snake.body[0].x && this.piece.y == this.snake.body[0].y)
+    {
+	this.snake.addSection();
+	this.placePiece();
+    }
+};
+
+board.prototype.placePiece = function()
+{
+    var usedXs = this.snake.body.map(function(s) {return s.x;});
+    var usedYs = this.snake.body.map(function(s) {return s.y;});
+
+    var xs = [];
+    for(var x = 0; x < boardWidth; x++)
+    {
+	if(usedXs.indexOf(x) != -1)
+	{
+	    continue;
+	}
+	xs.push(x);
+    }
+
+    var ys = [];
+    for(var y = 0; y < boardWidth; y++)
+    {
+	if(usedYs.indexOf(y) != -1)
+	    continue;
+	ys.push(y);
+    }
+
+    var xi = Math.floor(Math.random() * xs.length);
+    var yi = Math.floor(Math.random() * ys.length);
+
+    this.piece = {x:xs[xi], y:ys[yi]};
+};
+
+board.prototype.interact = function(e)
+{			
+    var left = false;
+
+    if(e.clientX - (canvas.clientWidth/2) <= 0)
+    {
+	left = true;
+    }
+
+    this.snake.turn(left);
+};
+
+function round(value)
+{
+    return (0.5 + value) | 0;
+}
+
+var game = new board();
+
+canvas.addEventListener('mouseup', game.interact.bind(game));
+
+game.placePiece();
+
+game.run()
