@@ -31,7 +31,7 @@ window.requestAnimFrame = (function(callback){
 
 var direction = {left:0, up:1, right:2, down:3};
 
-var boardWidth = 144;
+var boardWidth = 64;
 
 var width = window.innerWidth - 4;
 var height = window.innerHeight - 4;
@@ -44,8 +44,8 @@ var context = canvas.getContext("2d");
 
 function setSnakeSizes()
 {
-    width = window.innerWidth;
-    height = window.innerHeight;
+    width = window.innerWidth - 4;
+    height = window.innerHeight - 4;
     canvas.width = width;
     canvas.height = height;
     sectionHeight = height/boardWidth;
@@ -241,7 +241,7 @@ board.prototype.draw = function()
 	{
 	    context.fillStyle = '#FFFFFF';
 	    var textHeight = round(sectionHeight*8);
-	    context.font = textHeight+'px';
+	    context.font = textHeight+'px "courier new"';
 	    var m = context.measureText('Game Over');
 	    context.fillText('Game Over', round(width/2 - (m.width/2)), round(height/2 - (2*textHeight)));
 	    var score = 'Score: ' + this.snake.body.length;
