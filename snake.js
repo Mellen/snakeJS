@@ -353,7 +353,7 @@ board.prototype.interact = function(e)
 
 	    if(!e.clientX)
 	    {
-		x = e.originalEvent.touches[0].pageX;
+		x = e.originalEvent.clientX;
 	    }
 
 	    if(x - (canvas.clientWidth/2) <= 0)
