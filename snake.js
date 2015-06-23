@@ -31,10 +31,12 @@ window.requestAnimFrame = (function(callback){
 
 var direction = {left:0, up:1, right:2, down:3};
 
-var boardWidth = 80;
+var boardWidth = 144;
 
-var width = canvas.width;
-var height = canvas.height;
+var width = window.innerWidth - 4;
+var height = window.innerHeight - 4;
+canvas.width = width;
+canvas.height = height;
 var sectionHeight = height/boardWidth;
 var sectionWidth = width/boardWidth;
 
@@ -42,8 +44,10 @@ var context = canvas.getContext("2d");
 
 function setSnakeSizes()
 {
-    width = canvas.width;
-    height = canvas.height;
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
     sectionHeight = height/boardWidth;
     sectionWidth = width/boardWidth;
     context = canvas.getContext("2d");
@@ -191,50 +195,99 @@ snake.prototype.addSection = function()
     this.body.push(section);
 };
 
+var state = {firstRun:0, playing:2, stopped:3, newGame:4};
+
 function board()
 {
     this.snake = new snake();
     this.piece = {x:0, y:0};
+    this.state = state.firstRun;
 }
 
 board.prototype.draw = function()
 {
     context.clearRect(0, 0, width, height);
 
-    context.fillStyle = '#FFFFFF';
-
-    for(var secI = 0; secI < this.snake.body.length; secI++)
+    switch(this.state)
     {
-	var section = this.snake.body[secI];
-	var x = round((section.x*sectionWidth));
-	var y = round((section.y*sectionHeight));
-	context.fillRect(x, y, round(sectionWidth), round(sectionHeight));
+    case state.firstRun:
+	{
+	    context.fillStyle = '#FFFFFF';
+	    context.font = round(sectionHeight*8)+'px "courier new"';
+	    var m = context.measureText('New Game');
+	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
+	}
+	break;
+    case state.playing:
+	{
+	    context.fillStyle = '#FFFFFF';
+
+	    for(var secI = 0; secI < this.snake.body.length; secI++)
+	    {
+		var section = this.snake.body[secI];
+		var x = round((section.x*sectionWidth));
+		var y = round((section.y*sectionHeight));
+		context.fillRect(x, y, round(sectionWidth), round(sectionHeight));
+	    }
+
+	    context.fillStyle = '#FF0000';
+
+	    var pieceX = round(this.piece.x*sectionWidth);
+	    var pieceY = round(this.piece.y*sectionHeight);
+	    context.fillRect(pieceX, pieceY, round(sectionWidth), round(sectionHeight));
+	}
+	break;
+    case state.newGame:
+	{
+	    context.fillStyle = '#FFFFFF';
+	    var textHeight = round(sectionHeight*8);
+	    context.font = textHeight+'px';
+	    var m = context.measureText('Game Over');
+	    context.fillText('Game Over', round(width/2 - (m.width/2)), round(height/2 - (2*textHeight)));
+	    var score = 'Score: ' + this.snake.body.length;
+	    m = context.measureText(score);
+	    context.fillStyle = '#FFFF00';
+	    context.fillText(score, round(width/2 - (m.width/2)), round(height/2 - textHeight));
+	    var m = context.measureText('New Game');
+	    context.fillStyle = '#FFFFFF';
+	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
+	}
+	break;
+    default:
+	break;
     }
-
-    context.fillStyle = '#FF0000';
-
-    var pieceX = round(this.piece.x*sectionWidth);
-    var pieceY = round(this.piece.y*sectionHeight);
-    context.fillRect(pieceX, pieceY, round(sectionWidth), round(sectionHeight));
 };
 
 board.prototype.run = function()
 {
-    collision = this.snake.move();
-    this.checkPieceEaten();
-    this.draw();
-    var that = this;
-    if(!collision)
+    switch(this.state)
     {
-	setTimeout(function()
-		   {
-		       requestAnimFrame(that.run.bind(that));
-		   }, 1000/10);
+    case state.playing:
+	{
+	    var collision = this.snake.move();
+	    this.checkPieceEaten();
+	}
+	break;
+    case state.stopped:
+	this.state = state.newGame;
+	break;
+    default:
+	break;
     }
-    else
+
+    this.draw();
+
+    if(collision)
     {
+	this.state = state.stopped;
 	console.log('crash!');
     }
+
+    var that = this;
+    setTimeout(function()
+	       {
+		   requestAnimFrame(that.run.bind(that));
+	       }, 1000/10);
 };
 
 board.prototype.checkPieceEaten = function()
@@ -275,16 +328,33 @@ board.prototype.placePiece = function()
     this.piece = {x:xs[xi], y:ys[yi]};
 };
 
+board.prototype.restart = function()
+{
+    this.snake = new snake();
+    this.placePiece();
+    this.state = state.playing;
+};
+
 board.prototype.interact = function(e)
 {			
-    var left = false;
-
-    if(e.clientX - (canvas.clientWidth/2) <= 0)
+    switch(this.state)
     {
-	left = true;
-    }
+    case state.playing:
+	{
+	    var left = false;
 
-    this.snake.turn(left);
+	    if(e.clientX - (canvas.clientWidth/2) <= 0)
+	    {
+		left = true;
+	    }
+	    
+	    this.snake.turn(left);
+	}
+	break;
+    case state.newGame:
+    case state.firstRun:
+	this.restart()
+    }
 };
 
 function round(value)
