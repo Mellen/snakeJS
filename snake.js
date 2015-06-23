@@ -353,7 +353,7 @@ board.prototype.interact = function(e)
 
 	    if(!e.clientX)
 	    {
-		x = e.originalEvent.clientX;
+		x = e.changedTouches[0].clientX;
 	    }
 
 	    if(x - (canvas.clientWidth/2) <= 0)
@@ -368,6 +368,7 @@ board.prototype.interact = function(e)
     case state.firstRun:
 	this.restart()
     }
+    e.preventDefault();
 };
 
 function round(value)
