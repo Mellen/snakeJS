@@ -216,6 +216,9 @@ board.prototype.draw = function()
 	    context.font = round(sectionHeight*8)+'px "courier new"';
 	    var m = context.measureText('New Game');
 	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
+	    context.font = round(sectionHeight*2.5)+'px "courier new"';
+	    m = context.measureText('Tap left for clockwise, tap right for anticlockwise');
+	    context.fillText('Tap left for clockwise, tap right for anticlockwise', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*2.75));
 	}
 	break;
     case state.playing:
@@ -251,6 +254,9 @@ board.prototype.draw = function()
 	    var m = context.measureText('New Game');
 	    context.fillStyle = '#FFFFFF';
 	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
+	    context.font = round(sectionHeight*2.5)+'px "courier new"';
+	    m = context.measureText('Tap left for clockwise, tap right for anticlockwise');
+	    context.fillText('Tap left for clockwise, tap right for anticlockwise', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*2.75));
 	}
 	break;
     default:
@@ -365,6 +371,7 @@ function round(value)
 var game = new board();
 
 canvas.addEventListener('mouseup', game.interact.bind(game));
+canvas.addEventListener('touchend', game.interact.bind(game));
 
 game.placePiece();
 
