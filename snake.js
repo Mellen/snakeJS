@@ -349,7 +349,14 @@ board.prototype.interact = function(e)
 	{
 	    var left = false;
 
-	    if(e.clientX - (canvas.clientWidth/2) <= 0)
+	    var x = e.clientX;
+
+	    if(!e.clientX)
+	    {
+		x = e.originalEvent.touches[0].pageX;
+	    }
+
+	    if(x - (canvas.clientWidth/2) <= 0)
 	    {
 		left = true;
 	    }
