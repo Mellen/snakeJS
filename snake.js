@@ -128,7 +128,7 @@ snake.prototype.checkCollision = function()
 	return true;
     }
 
-    if(this.body[0].x > boardWidth || this.body[0].y > boardWidth)
+    if(this.body[0].x >= boardWidth || this.body[0].y >= boardWidth)
     {
 	return true;
     }
