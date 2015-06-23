@@ -138,21 +138,55 @@ snake.prototype.checkCollision = function()
 
 snake.prototype.turn = function(left)
 {
-    if(left)
+    switch(this.body[0].direction)
     {
-	this.body[0].direction++;
-	if(this.body[0].direction > direction.down)
+    case direction.left:
 	{
-	    this.body[0].direction = direction.left;
+	    if(left)
+	    {
+		this.body[0].direction = direction.down;
+	    }
+	    else
+	    {
+		this.body[0].direction = direction.up;
+	    }
 	}
-    }
-    else
-    {
-	this.body[0].direction--;
-	if(this.body[0].direction < direction.left)
+    case direction.right:
 	{
-	    this.body[0].direction = direction.down;
+	    if(left)
+	    {
+		this.body[0].direction = direction.up;
+	    }
+	    else
+	    {
+		this.body[0].direction = direction.down;
+	    }
 	}
+	break;
+    case direction.up:
+	{
+	    if(left)
+	    {
+		this.body[0].direction = direction.left;
+	    }
+	    else
+	    {
+		this.body[0].direction = direction.right;
+	    }
+	}
+	break;
+    case direction.down:
+	{
+	    if(left)
+	    {
+		this.body[0].direction = direction.left;
+	    }
+	    else
+	    {
+		this.body[0].direction = direction.right;
+	    }
+	}
+	break;
     }
 
     for(var secI = 1; secI < this.body.length; secI++)
@@ -217,8 +251,10 @@ board.prototype.draw = function()
 	    var m = context.measureText('New Game');
 	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
 	    context.font = round(sectionHeight*2.5)+'px "courier new"';
-	    m = context.measureText('Tap left for clockwise, tap right for anticlockwise');
-	    context.fillText('Tap left for clockwise, tap right for anticlockwise', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*2.75));
+	    m = context.measureText('Tap on the left to turn to the left');
+	    context.fillText('Tap on the left to turn to the left', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*2.75));
+	    m = context.measureText('Tap on the right to turn to the right');
+	    context.fillText('Tap on the right to turn to the right', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*5.5));
 	}
 	break;
     case state.playing:
