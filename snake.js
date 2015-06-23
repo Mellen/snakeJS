@@ -370,8 +370,14 @@ function round(value)
 
 var game = new board();
 
-canvas.addEventListener('mouseup', game.interact.bind(game));
-canvas.addEventListener('touchend', game.interact.bind(game));
+if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) 
+{
+    canvas.addEventListener('touchend', game.interact.bind(game)); 
+}
+else
+{
+    canvas.addEventListener('mouseup', game.interact.bind(game));
+}
 
 game.placePiece();
 
