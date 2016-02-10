@@ -31,14 +31,15 @@ window.requestAnimFrame = (function(callback){
 
 var direction = {left:0, up:1, right:2, down:3};
 
-var boardWidth = 64;
-
 var width = window.innerWidth - 4;
 var height = window.innerHeight - 4;
+
+var boardWidth = 40;
+
 canvas.width = width;
 canvas.height = height;
-var sectionHeight = height/boardWidth;
-var sectionWidth = width/boardWidth;
+var sectionHeight = height/boardWidth
+var sectionWidth = width/boardWidth
 
 var context = canvas.getContext("2d");
 
@@ -55,61 +56,60 @@ function setSnakeSizes()
 
 setResizeHandler(setSnakeSizes, 350);
 
-function snakeSection(x, y, dir)
+function snakeSection(x, y)
 {
     this.x = x;
     this.y = y;
-    this.direction = dir;
-    this.turningPoints = [];
-    this.turnCallBacks = [];
+    this.next = null;
 }
 
-snakeSection.prototype.move = function()
+snakeSection.prototype.move = function(newX, newY)
 {
+    if(this.next != null)
+    {
+	this.next.move(this.x, this.y);
+    }
+
+    this.x = newX;
+    this.y = newY;
+};
+
+snakeSection.prototype.setSibling = function(next)
+{
+    this.next = next;
+}
+
+function snake()
+{
+    this.direction = direction.down;
+    this.body = [new snakeSection(Math.floor(boardWidth/2), Math.floor(boardWidth/2))];
+}
+
+snake.prototype.move = function()
+{
+    var x = this.body[0].x;
+    var y = this.body[0].y;
+
     switch(this.direction)
     {
     case direction.right:
-	this.x += 1;
+	x += 1;
 	break;
     case direction.left:
-	this.x -= 1;
+	x -= 1;
 	break;
     case direction.up:
-	this.y -= 1;
+	y -= 1;
 	break;
     case direction.down:
-	this.y += 1;
+	y += 1;
 	break;
     default:
 	break;
     }
 
-    if(this.turningPoints.length > 0)
-    {
-	if(this.x == this.turningPoints[0].x && this.y == this.turningPoints[0].y)
-	{
-	    var tp = this.turningPoints.shift();
-	    this.direction = tp.direction;
-	}
-    }
-};
+    this.body[0].move(x, y);
 
-snakeSection.prototype.addTurningPoint = function(turningPoint)
-{
-    this.turningPoints.push(turningPoint);
-};
-
-function snake()
-{
-    this.body = [new snakeSection(0, 0, direction.down)];
-}
-
-snake.prototype.move = function()
-{
-    for(var secI = 0; secI < this.body.length; secI++)
-    {
-	this.body[secI].move()
-    }
     return this.checkCollision();
 };
 
@@ -138,61 +138,22 @@ snake.prototype.checkCollision = function()
 
 snake.prototype.turn = function(left)
 {
-    switch(this.body[0].direction)
+    if(left)
     {
-    case direction.left:
+	this.direction++;
+	if(this.direction > direction.down)
 	{
-	    if(left)
-	    {
-		this.body[0].direction = direction.down;
-	    }
-	    else
-	    {
-		this.body[0].direction = direction.up;
-	    }
+	    this.direction = direction.left;
 	}
-    case direction.right:
-	{
-	    if(left)
-	    {
-		this.body[0].direction = direction.up;
-	    }
-	    else
-	    {
-		this.body[0].direction = direction.down;
-	    }
-	}
-	break;
-    case direction.up:
-	{
-	    if(left)
-	    {
-		this.body[0].direction = direction.left;
-	    }
-	    else
-	    {
-		this.body[0].direction = direction.right;
-	    }
-	}
-	break;
-    case direction.down:
-	{
-	    if(left)
-	    {
-		this.body[0].direction = direction.left;
-	    }
-	    else
-	    {
-		this.body[0].direction = direction.right;
-	    }
-	}
-	break;
     }
-
-    for(var secI = 1; secI < this.body.length; secI++)
+    else
     {
-	this.body[secI].addTurningPoint({x:this.body[0].x, y:this.body[0].y, direction:this.body[0].direction});
-    }    
+	this.direction--;
+	if(this.direction < direction.left)
+	{
+	    this.direction = direction.down;
+	}
+    }
 };
 
 snake.prototype.addSection = function()
@@ -201,31 +162,10 @@ snake.prototype.addSection = function()
     var curSec = this.body[secI];
     var x = curSec.x;
     var y = curSec.y;
-    switch(this.body[secI].direction)
-    {
-    case direction.right:
-	x--;
-	break;
-    case direction.down:
-	y--;
-	break;
-    case direction.left:
-	x++;
-	break;
-    case direction.up:
-	y++;
-	break;
-    default:
-	break;
-    }
+    var section = new snakeSection(x, y);
 
-    var section = new snakeSection(x, y, curSec.direction);
-
-    for(var tpi = 0; tpi < curSec.turningPoints.length; tpi++)
-    {
-	section.addTurningPoint(curSec.turningPoints[tpi]);
-    }
-
+    curSec.setSibling(section);
+    
     this.body.push(section);
 };
 
@@ -247,14 +187,12 @@ board.prototype.draw = function()
     case state.firstRun:
 	{
 	    context.fillStyle = '#FFFFFF';
-	    context.font = round(sectionHeight*8)+'px "courier new"';
+	    context.font = round(sectionHeight*6.5)+'px "courier new"';
 	    var m = context.measureText('New Game');
 	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
-	    context.font = round(sectionHeight*2.5)+'px "courier new"';
-	    m = context.measureText('Tap on the left to turn to the left');
-	    context.fillText('Tap on the left to turn to the left', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*2.75));
-	    m = context.measureText('Tap on the right to turn to the right');
-	    context.fillText('Tap on the right to turn to the right', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*5.5));
+	    context.font = round(sectionHeight*2)+'px "courier new"';
+	    m = context.measureText('Tap left for clockwise, tap right for anticlockwise');
+	    context.fillText('Tap left for clockwise, tap right for anticlockwise', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*8.75));
 	}
 	break;
     case state.playing:
@@ -279,7 +217,7 @@ board.prototype.draw = function()
     case state.newGame:
 	{
 	    context.fillStyle = '#FFFFFF';
-	    var textHeight = round(sectionHeight*8);
+	    var textHeight = round(sectionHeight*6.5);
 	    context.font = textHeight+'px "courier new"';
 	    var m = context.measureText('Game Over');
 	    context.fillText('Game Over', round(width/2 - (m.width/2)), round(height/2 - (2*textHeight)));
@@ -290,9 +228,9 @@ board.prototype.draw = function()
 	    var m = context.measureText('New Game');
 	    context.fillStyle = '#FFFFFF';
 	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
-	    context.font = round(sectionHeight*2.5)+'px "courier new"';
+	    context.font = round(sectionHeight*2)+'px "courier new"';
 	    m = context.measureText('Tap left for clockwise, tap right for anticlockwise');
-	    context.fillText('Tap left for clockwise, tap right for anticlockwise', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*2.75));
+	    context.fillText('Tap left for clockwise, tap right for anticlockwise', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*8.75));
 	}
 	break;
     default:
@@ -347,7 +285,7 @@ board.prototype.placePiece = function()
     var usedYs = this.snake.body.map(function(s) {return s.y;});
 
     var xs = [];
-    for(var x = 0; x < boardWidth; x++)
+    for(var x = 2; x < boardWidth - 2; x++)
     {
 	if(usedXs.indexOf(x) != -1)
 	{
@@ -357,7 +295,7 @@ board.prototype.placePiece = function()
     }
 
     var ys = [];
-    for(var y = 0; y < boardWidth; y++)
+    for(var y = 1; y < boardWidth - 1; y++)
     {
 	if(usedYs.indexOf(y) != -1)
 	    continue;
