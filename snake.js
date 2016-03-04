@@ -190,6 +190,12 @@ board.prototype.draw = function()
 	    context.font = round(sectionHeight*6.5)+'px "courier new"';
 	    var m = context.measureText('New Game');
 	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
+	    context.strokeStyle = '#AAAAFF';
+	    context.strokeRect(round(width/2 - (m.width/2)) - 10, round(height/2) - (round(sectionHeight*6.5)/1.3), m.width+10, round(sectionHeight*6.5));
+	    this.ngX = round(width/2 - (m.width/2)) - 10;
+	    this.ngY = round(height/2) - (round(sectionHeight*6.5)/1.3)
+	    this.ngWidth = m.width + 10;
+	    this.ngHeight = round(sectionHeight*6.5);
 	    context.font = round(sectionHeight*2)+'px "courier new"';
 	    m = context.measureText('Tap left for clockwise, tap right for anticlockwise');
 	    context.fillText('Tap left for clockwise, tap right for anticlockwise', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*8.75));
@@ -228,6 +234,12 @@ board.prototype.draw = function()
 	    var m = context.measureText('New Game');
 	    context.fillStyle = '#FFFFFF';
 	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
+	    context.strokeStyle = '#AAAAFF';
+	    context.strokeRect(round(width/2 - (m.width/2)) - 10, round(height/2) - (round(sectionHeight*6.5)/1.3), m.width+10, round(sectionHeight*6.5));
+	    this.ngX = round(width/2 - (m.width/2)) - 10;
+	    this.ngY = round(height/2) - (round(sectionHeight*6.5)/1.3)
+	    this.ngWidth = m.width + 10;
+	    this.ngHeight = round(sectionHeight*6.5);
 	    context.font = round(sectionHeight*2)+'px "courier new"';
 	    m = context.measureText('Tap left for clockwise, tap right for anticlockwise');
 	    context.fillText('Tap left for clockwise, tap right for anticlockwise', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*8.75));
@@ -340,7 +352,27 @@ board.prototype.interact = function(e)
 	break;
     case state.newGame:
     case state.firstRun:
-	this.restart()
+	{
+	    var x = e.clientX;
+
+	    if(!e.clientX)
+	    {
+		x = e.changedTouches[0].clientX;
+	    }
+
+	    var y = e.clientY;
+
+	    if(!e.clientY)
+	    {
+		y = e.changedTouches[0].clientY;
+	    }
+
+	    if(x > this.ngX && x < this.ngX + this.ngWidth && y > this.ngY && y < this.ngY + this.ngHeight)
+	    {
+
+		this.restart();
+	    }
+	}
     }
     e.preventDefault();
 };
