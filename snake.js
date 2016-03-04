@@ -178,6 +178,14 @@ function board()
     this.state = state.firstRun;
 }
 
+board.prototype.setNewGameBounds = function(textMetric)
+{
+    this.ngX = round(width/2 - (textMetric.width/2)) - 5;
+    this.ngY = round(height/2) - round(sectionHeight*6.5) + 5;
+    this.ngWidth = textMetric.width + 10;
+    this.ngHeight = round(sectionHeight*6.5) + 5;
+};
+
 board.prototype.draw = function()
 {
     context.clearRect(0, 0, width, height);
@@ -191,11 +199,8 @@ board.prototype.draw = function()
 	    var m = context.measureText('New Game');
 	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
 	    context.strokeStyle = '#AAAAFF';
-	    context.strokeRect(round(width/2 - (m.width/2)) - 10, round(height/2) - (round(sectionHeight*6.5)/1.3), m.width+10, round(sectionHeight*6.5));
-	    this.ngX = round(width/2 - (m.width/2)) - 10;
-	    this.ngY = round(height/2) - (round(sectionHeight*6.5)/1.3)
-	    this.ngWidth = m.width + 10;
-	    this.ngHeight = round(sectionHeight*6.5);
+	    this.setNewGameBounds(m);
+	    context.strokeRect(this.ngX, this.ngY, this.ngWidth, this.ngHeight);
 	    context.font = round(sectionHeight*2)+'px "courier new"';
 	    m = context.measureText('Tap left for clockwise, tap right for anticlockwise');
 	    context.fillText('Tap left for clockwise, tap right for anticlockwise', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*8.75));
@@ -235,11 +240,8 @@ board.prototype.draw = function()
 	    context.fillStyle = '#FFFFFF';
 	    context.fillText('New Game', round(width/2 - (m.width/2)), round(height/2));
 	    context.strokeStyle = '#AAAAFF';
-	    context.strokeRect(round(width/2 - (m.width/2)) - 10, round(height/2) - (round(sectionHeight*6.5)/1.3), m.width+10, round(sectionHeight*6.5));
-	    this.ngX = round(width/2 - (m.width/2)) - 10;
-	    this.ngY = round(height/2) - (round(sectionHeight*6.5)/1.3)
-	    this.ngWidth = m.width + 10;
-	    this.ngHeight = round(sectionHeight*6.5);
+	    this.setNewGameBounds(m);
+	    context.strokeRect(this.ngX, this.ngY, this.ngWidth, this.ngHeight);
 	    context.font = round(sectionHeight*2)+'px "courier new"';
 	    m = context.measureText('Tap left for clockwise, tap right for anticlockwise');
 	    context.fillText('Tap left for clockwise, tap right for anticlockwise', round(width/2 - (m.width/2)), round(height/2) + round(sectionHeight*8.75));
@@ -369,7 +371,6 @@ board.prototype.interact = function(e)
 
 	    if(x > this.ngX && x < this.ngX + this.ngWidth && y > this.ngY && y < this.ngY + this.ngHeight)
 	    {
-
 		this.restart();
 	    }
 	}
